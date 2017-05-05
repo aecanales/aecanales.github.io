@@ -20,14 +20,53 @@ var f_desc_dy = 60; //px
 var f_box = {} //rect
 var f_name = {} //text
 var f_lifetime = {} //text
-var f_desc = {} //text, but... How do I do text wrap? D:
+var f_desc = {} //multitext (view plugins)
 var f_text_box = {} //group
-initializeFTextBox();
+
+// SETTINGS - FILTERS
+var method_types = 
+	["degollada",
+	"baleada",
+	"apunalada",
+	"estrangulada",
+	"golpeada",
+	"quemada",
+	"asfixiada",
+	"otro",
+	"???"];
+var relation_types =
+	["ex-pareja",
+	"ex-esposo",
+	"esposo",
+	"pareja",
+	"familiar",
+	"conviviente",
+	"ex-conviviente",
+	"familiar",
+	"tercero",
+	"???"];
+
+var relation_graphics = initializeGraphicGroup(relation_types); //Array of arrays where each array hold graphics corresponding to a relation type
+var method_graphics = initializeGraphicGroup(method_types); //Idem for methods
+
+var relations = []; //Array of groups where each group represents a relation type 
+var methods = []; //Idem for methods
+
+var mouse_x = 0;
+var mouse_y = 0;
 
 window.onload = function() {
-	$( "#database" ).load( "data/database.csv", function() {
+	$( "#database" ).load( "data/database_main.csv", function() {
 		database = Papa.parse($('#database').val()).data;
+		initializeFTextBox();
 		drawTimeline(); //Timeline has to be drawn here to make sure the database has already been parsed
+
+		for (var i = 0; i < relation_types.length; i++) {
+			relations.push(s.group(relation_graphics[i]));
+		}
+		for (var i = 0; i < method_types.length; i++) {
+			methods.push(s.group(method_graphics[i]));
+		}
 	});
 }
 
@@ -35,7 +74,7 @@ function initializeFTextBox(){
 	f_box = s.rect(0, 0, 200, 300, 10, 10);
 	f_name = s.text(f_text_dx, f_name_dy, "test");
 	f_lifetime = s.text(f_text_dx, f_lifetime_dy, "1900-2000");
-	f_desc = s.text(f_text_dx, f_desc_dy, "Lorem Ipsum");
+	f_desc = s.multitext(f_text_dx, f_desc_dy, "desc", 180, { "font-size": "12px" });
 	f_box.attr({
     	fill: "#F7CDDE",
     	stroke: "#FFFFFF",
@@ -47,11 +86,8 @@ function initializeFTextBox(){
 }
 
 function fTextBoxFollowMouse(ev, x, y ){
-	f_box.attr({x: x, y: y});
-	f_name.attr({x: x+f_text_dx, y: y+f_name_dy});
-	f_lifetime.attr({x: x+f_text_dx, y: y+f_lifetime_dy});
-	f_desc.attr({x: x+f_text_dx, y: y+f_desc_dy});
-	//Shouldn't I be able just to set the x and y of the f_text_box group? It hasn't worked the times I've tried it though...
+	mouse_x = x;
+	mouse_y = y;
 }
 
 //TO DO - Comment how this code works
@@ -97,6 +133,21 @@ function getYearIndex(year){
 	else {return year} //TO DO - Check the database entries with no year!
 }
 
+function initializeGraphicGroup(types){
+	var return_array = [];
+	for (var i = 0; i < types.length; i++)
+		return_array.push([]);
+	return return_array;
+}
+
+function groupIndex(types_array, type){
+	for (var i = 0; i < types_array.length; i++) {
+		if (types_array[i] == type) {return i}
+	}
+	console.log("Unknown type: " + type);
+	return 0;
+}
+
 function createFemale(x, y, info){
 	Snap.load("img/female.svg", function (f) { 
 		var g = f.select("g");
@@ -105,8 +156,12 @@ function createFemale(x, y, info){
 		g.data("orig_t_y",y);
 		g.data("info",info);
 		g.attr({fill:"#EA77A6"});
+		//Function that takes info as a param and returns the index of the array the woman graphic needs to be added t
 		g.transform(createTransfrom(x, y, 0.05));
 		g.hover(femaleHoverIn, femaleHoverOut);
+
+		relation_graphics[groupIndex(relation_types, info[7])].push(g)
+		method_graphics[groupIndex(method_types, info[8])].push(g)
 	});
 }
 
@@ -116,25 +171,33 @@ function createTransfrom(x, y, s){
 }
 
 function femaleHoverIn(){
+
+	f_box.attr({x: mouse_x, y: mouse_y});
+	f_name.attr({x: mouse_x+f_text_dx, y: mouse_y+f_name_dy});
+	f_lifetime.attr({x: mouse_x+f_text_dx, y: mouse_y+f_lifetime_dy});
+
 	this.attr({fill:"#D8256E"});
 	this.transform(createTransfrom(this.data("orig_t_x"), this.data("orig_t_y"), 0.06));
-
 	f_name.attr({text: this.data("info")[4]});
 	f_lifetime.attr({text: getLifetime(this.data("info"))});
-	f_desc.attr({text: this.data("info")[11]});
+	
 	f_text_box.attr({visibility: "visible"});
 	f_text_box.appendTo(f_text_box.paper);
+	f_desc = s.multitext(mouse_x+f_text_dx, mouse_y+f_desc_dy, this.data("info")[11], 180, { "font-size": "12px" });
 }
 
-//TO DO - handle cases where female doesn't have death age
 function getLifetime(f_data){
-	death = parseInt(f_data[0]);
-	age = parseInt(f_data[5]);
-	return (death - age) + "-" + death
+	if (f_data[5] == ""){ return "????-"+death}
+	else {
+		death = parseInt(f_data[0]);
+		age = parseInt(f_data[5]);
+		return (death - age) + "-" + death
+	}
 }
 
 function femaleHoverOut(){
 	this.attr({fill:"#EA77A6"});
 	this.transform(createTransfrom(this.data("orig_t_x"), this.data("orig_t_y"), 0.05));
 	f_text_box.attr({visibility: "hidden"});
+	f_desc.remove();
 }
