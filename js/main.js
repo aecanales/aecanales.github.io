@@ -2,6 +2,15 @@ s = Snap("#svg"); //Main canvas
 var database = []; //Array with data from csv
 
 // SETTINGS - TIMELINE
+var year_init_x = 55; //px
+var year_init_y = 580; //px
+var year_horizontal_spacing = 96; //px
+
+var underline_dx = -20;//px
+var underline_dy = -30; //px
+var underline_width = 950; //px
+var underline_heigth = 5; //px
+
 var left_edge = -130; //Snap.svg transfrom units (?)
 var bottom_edge = 50; //Snap.svg transfrom units (?)
 
@@ -49,8 +58,15 @@ var relation_types =
 var relation_graphics = initializeGraphicGroup(relation_types); //Array of arrays where each array hold graphics corresponding to a relation type
 var method_graphics = initializeGraphicGroup(method_types); //Idem for methods
 
-var relations = []; //Array of groups where each group represents a relation type 
-var methods = []; //Idem for methods
+var button_init_x = 1000;
+var button_init_y = 100;
+var button_dy = 25;
+var button_size = 10;
+var button_text_dx = 20;
+var button_text_dy = 8;
+
+var relation_filters = initializeFilterGroup(relation_types); //Array of booleans corresponding whether a filter is selected
+var method_filters = initializeFilterGroup(method_types); //Idem
 
 var mouse_x = 0;
 var mouse_y = 0;
@@ -59,15 +75,73 @@ window.onload = function() {
 	$( "#database" ).load( "data/database_main.csv", function() {
 		database = Papa.parse($('#database').val()).data;
 		initializeFTextBox();
-		drawTimeline(); //Timeline has to be drawn here to make sure the database has already been parsed
-
-		for (var i = 0; i < relation_types.length; i++) {
-			relations.push(s.group(relation_graphics[i]));
-		}
-		for (var i = 0; i < method_types.length; i++) {
-			methods.push(s.group(method_graphics[i]));
-		}
+		drawTimeline(); //Timeline has to be drawn after database is parsed
+		initializeFilterButtons(); //Filter buttons have to be drawn after the females have been categorized in groups (which is done when they're drawn)
 	});
+}
+
+function initializeFilterButtons(){
+	for (var i = 0; i < relation_types.length - 1; i++) {
+		var checkbox = s.rect(button_init_x, button_init_y + button_dy*i, button_size,button_size);
+		checkbox.attr({
+    		fill: "#FEFEFE",
+    		stroke: "#282828",
+    		strokeWidth: 2
+    	});
+    	checkbox.data("filter_array", relation_filters);
+    	checkbox.data("index", i);
+    	checkbox.data("enabled", false);
+    	checkbox.click(set_filter);
+    	var text = s.text(button_init_x+button_text_dx, button_init_y + button_dy*i + button_text_dy, relation_types[i]);
+    	text.attr({fill:"#FFFFFF"});
+	}
+}
+
+function set_filter(){
+	if (this.data("enabled") == false){
+		this.attr({fill:"#DB1D6A"});
+		this.data("enabled", true);
+		this.data("filter_array")[this.data("index")] = true;
+		run_filter();
+	}
+	else{
+		this.attr({fill:"#FEFEFE"});
+		this.data("enabled", false);
+		this.data("filter_array")[this.data("index")] = false;
+		run_filter();
+	}
+}
+
+//I currently check everything when I add a filter... it efficient enough?
+function run_filter(){
+	if (noFilterSelected()){
+		//Would be correct to do this on the complete female array but for now...
+		for (var i = 0; i < relation_filters.length; i++)
+			for (var j = 0; j < relation_graphics[i].length; j++)
+				relation_graphics[i][j].attr({opacity: 1});
+		return
+	}
+
+	for (var i = 0; i < relation_filters.length; i++) {
+		if (relation_filters[i] == false){
+			for (var j = 0; j < relation_graphics[i].length; j++)
+				relation_graphics[i][j].attr({opacity: 0.25});
+		}
+		else{
+			for (var j = 0; j < relation_graphics[i].length; j++)
+				relation_graphics[i][j].attr({opacity: 1});
+		}
+	}
+}
+
+function noFilterSelected(){
+	for (var i = 0; i < relation_filters.length; i++)
+		if (relation_filters[i] == true)
+			return false;
+	for (var i = 0; i < method_filters.length; i++)
+		if (method_filters[i] == true)
+			return false;
+	return true;
 }
 
 function initializeFTextBox(){
@@ -105,7 +179,15 @@ function drawTimeline(){
 		[left_edge+bar_spacing*8, bottom_edge, 0], /*8 2016*/
 		[left_edge+bar_spacing*9, bottom_edge, 0]  /*9 2017*/
 	];
-	
+
+	for (var i = 0; i < years.length; i++) {
+		var n_year = 2008 + i;
+		year_number = s.text(year_init_x + year_horizontal_spacing*i, year_init_y, n_year.toString());
+		year_number.attr({fill:"#FFFFFF"});
+	}
+
+	var underline = s.rect(year_init_x + underline_dx, year_init_y + underline_dy, underline_width, underline_heigth);
+	underline.attr({fill: "#DB1D6A"});
 
 	for (var i = 1; i < database.length; i++) {
 		if (database[i][0] == "") {continue;}
@@ -140,6 +222,14 @@ function initializeGraphicGroup(types){
 	return return_array;
 }
 
+//TO DO- Explain that -1
+function initializeFilterGroup(types){
+	var return_array = [];
+	for (var i = 0; i < types.length-1; i++)
+		return_array.push([]);
+	return return_array;
+}
+
 function groupIndex(types_array, type){
 	for (var i = 0; i < types_array.length; i++) {
 		if (types_array[i] == type) {return i}
@@ -156,12 +246,12 @@ function createFemale(x, y, info){
 		g.data("orig_t_y",y);
 		g.data("info",info);
 		g.attr({fill:"#EA77A6"});
-		//Function that takes info as a param and returns the index of the array the woman graphic needs to be added t
+
 		g.transform(createTransfrom(x, y, 0.05));
 		g.hover(femaleHoverIn, femaleHoverOut);
 
-		relation_graphics[groupIndex(relation_types, info[7])].push(g)
-		method_graphics[groupIndex(method_types, info[8])].push(g)
+		relation_graphics[groupIndex(relation_types, info[7])].push(g);
+		method_graphics[groupIndex(method_types, info[8])].push(g);
 	});
 }
 
@@ -171,6 +261,7 @@ function createTransfrom(x, y, s){
 }
 
 function femaleHoverIn(){
+	if (this.attr("opacity") == 0.25){return}
 
 	f_box.attr({x: mouse_x, y: mouse_y});
 	f_name.attr({x: mouse_x+f_text_dx, y: mouse_y+f_name_dy});
@@ -183,7 +274,7 @@ function femaleHoverIn(){
 	
 	f_text_box.attr({visibility: "visible"});
 	f_text_box.appendTo(f_text_box.paper);
-	f_desc = s.multitext(mouse_x+f_text_dx, mouse_y+f_desc_dy, this.data("info")[11], 180, { "font-size": "12px" });
+	f_desc = s.multitext(mouse_x+f_text_dx, mouse_y+f_desc_dy, this.data("info")[11], 200, { "font-size": "12px" });
 }
 
 function getLifetime(f_data){
@@ -196,6 +287,8 @@ function getLifetime(f_data){
 }
 
 function femaleHoverOut(){
+	if (this.attr("opacity") == 0.25){return}
+
 	this.attr({fill:"#EA77A6"});
 	this.transform(createTransfrom(this.data("orig_t_x"), this.data("orig_t_y"), 0.05));
 	f_text_box.attr({visibility: "hidden"});
