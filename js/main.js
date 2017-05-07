@@ -25,6 +25,11 @@ var f_text_dx = 10; //px
 var f_name_dy = 20; //px
 var f_lifetime_dy = 40; //px
 var f_desc_dy = 60; //px
+var fbox_width = 230; //px
+var min_height = 65; //px
+var height_per_line = 15; //px
+
+var flip_y = 450; //If mouse_y > than this, the fbox is drawn above the mouse instead of under
 
 var f_box = {} //rect
 var f_name = {} //text
@@ -64,7 +69,6 @@ var relation_graphics = initializeGraphicGroup(relation_types); //Array of array
 var method_graphics = initializeGraphicGroup(method_types); //Idem for methods
 var relation_filters = initializeFilterGroup(relation_types); //Array of booleans corresponding whether a filter is selected
 var method_filters = initializeFilterGroup(method_types); //Idem
-
 
 var button_init_x = 1000; //px
 var button_init_y = 100; //px
@@ -167,9 +171,14 @@ function run_filter(){
 	for (var i = 0; i < graphics_per_year.length; i++)
 		for (var j = 0; j < graphics_per_year[i].length; j++)
 				graphics_per_year[i][j].attr({opacity: 1});
-	
-	if (hasFilterSelected(relation_filters) == false && hasFilterSelected(method_filters) == false)
-		return
+
+	// By default we unmark all the "???" when filtering.
+	if (filterSelected == true){
+		for (var j = 0; j < relation_graphics[relation_graphics.length - 1].length; j++)
+			relation_graphics[relation_graphics.length - 1][j].attr({opacity: 0.25});
+		for (var j = 0; j < method_graphics[method_graphics.length-1].length; j++)
+			method_graphics[method_graphics.length-1][j].attr({opacity: 0.25});
+	}
 
 	if (hasFilterSelected(relation_filters) == true){
 		for (var i = 0; i < relation_filters.length; i++) {
@@ -189,14 +198,8 @@ function run_filter(){
 	}
 }
 
-function noFilterSelected(){
-	for (var i = 0; i < relation_filters.length; i++)
-		if (relation_filters[i] == true)
-			return false;
-	for (var i = 0; i < method_filters.length; i++)
-		if (method_filters[i] == true)
-			return false;
-	return true;
+function filterSelected(){
+	return hasFilterSelected(relation_filters) || hasFilterSelected(method_filters);
 }
 
 function hasFilterSelected(this_array){
@@ -207,10 +210,10 @@ function hasFilterSelected(this_array){
 }
 
 function initializeFTextBox(){
-	f_box = s.rect(0, 0, 200, 300, 10, 10);
+	f_box = s.rect(0, 0, fbox_width, min_height, 10, 10);
 	f_name = s.text(f_text_dx, f_name_dy, "test");
 	f_lifetime = s.text(f_text_dx, f_lifetime_dy, "1900-2000");
-	f_desc = s.multitext(f_text_dx, f_desc_dy, "desc", 180, { "font-size": "12px" });
+	f_desc = s.multitext(f_text_dx, f_desc_dy, "desc", fbox_width, { "font-size": "12px" });
 	f_box.attr({
     	fill: "#F7CDDE",
     	stroke: "#FFFFFF",
@@ -327,9 +330,16 @@ function createTransfrom(x, y, s){
 function femaleHoverIn(){
 	if (this.attr("opacity") == 0.25){return}
 
-	f_box.attr({x: mouse_x, y: mouse_y});
-	f_name.attr({x: mouse_x+f_text_dx, y: mouse_y+f_name_dy});
-	f_lifetime.attr({x: mouse_x+f_text_dx, y: mouse_y+f_lifetime_dy});
+	// Need to create this first so I can get the line length.
+	f_desc = s.multitext(mouse_x+f_text_dx, mouse_y+f_desc_dy, this.data("info")[11], fbox_width, { "font-size": "12px" });
+
+	var y_displacement = 0;
+	if (mouse_y > flip_y){ y_displacement = min_height + f_desc.attr("text").length * height_per_line;}
+
+	f_box.attr({x: mouse_x, y: mouse_y-y_displacement, height: min_height + f_desc.attr("text").length * height_per_line});
+	f_name.attr({x: mouse_x+f_text_dx, y: mouse_y+f_name_dy-y_displacement});
+	f_lifetime.attr({x: mouse_x+f_text_dx, y: mouse_y+f_lifetime_dy-y_displacement});
+	f_desc.attr({y: mouse_y+f_desc_dy-y_displacement});
 
 	this.attr({fill:"#D8256E"});
 	this.transform(createTransfrom(this.data("orig_t_x"), this.data("orig_t_y"), 0.06));
@@ -338,7 +348,7 @@ function femaleHoverIn(){
 	
 	f_text_box.attr({visibility: "visible"});
 	f_text_box.appendTo(f_text_box.paper);
-	f_desc = s.multitext(mouse_x+f_text_dx, mouse_y+f_desc_dy, this.data("info")[11], 200, { "font-size": "12px" });
+	f_desc.appendTo(f_desc.paper);
 }
 
 function getLifetime(f_data){
