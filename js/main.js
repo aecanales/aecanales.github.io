@@ -22,11 +22,11 @@ var f_vertical_spacing = 6; //Snap.svg transfrom units (?)
 
 // SETTINGS - FEMALE DESCRIPTION TEXT BOX
 var f_text_dx = 10; //px
-var f_name_dy = 20; //px
-var f_lifetime_dy = 40; //px
-var f_desc_dy = 60; //px
-var fbox_width = 230; //px
-var min_height = 65; //px
+var f_name_dy = 25; //px
+var f_lifetime_dy = 50; //px
+var f_desc_dy = 70; //px
+var fbox_width = 250; //px
+var min_height = 85; //px
 var height_per_line = 15; //px
 var textbox_dx = 10; //px respect the mouse pos
 
@@ -92,10 +92,11 @@ window.onload = function() {
 
 function initializeFilterButtons(){
 	n_selected_text = s.text(button_init_x, button_init_y - 50, database.length-1);
-	n_selected_text.attr({fill:"#FFFFFF"});
+	n_selected_text.attr({fill:"#FFFFFF", "font-family": "KL"});
 
-	var relation_text = s.text(button_init_x, button_init_y - 10, "Relación");
-	relation_text.attr({fill:"#FFFFFF"});
+
+	var relation_text = s.text(button_init_x, button_init_y - 10, "RELACIÓN");
+	relation_text.attr({fill:"#FFFFFF", "font-family": "KL"});
 	for (var i = 0; i < relation_types.length - 1; i++) {
 		var checkbox = s.rect(button_init_x, button_init_y + button_dy*i, button_size,button_size);
 		checkbox.attr({
@@ -109,11 +110,11 @@ function initializeFilterButtons(){
     	checkbox.data("enabled", false);
     	checkbox.click(set_filter);
     	var text = s.text(button_init_x+button_text_dx, button_init_y + button_dy*i + button_text_dy, relation_types[i]);
-    	text.attr({fill:"#FFFFFF"});
+    	text.attr({fill:"#FFFFFF", "font-family": "KL"});
 	}
 
-	var method_text = s.text(button_init_x, button_init_y + button_dy*(relation_types.length) - 10, "Método");
-	method_text.attr({fill:"#FFFFFF"});
+	var method_text = s.text(button_init_x, button_init_y + button_dy*(relation_types.length) - 10, "MÉTODO");
+	method_text.attr({fill:"#FFFFFF", "font-family": "KL"});
 	for (var i = 0; i < method_types.length - 1; i++) {
 		var dy = button_dy*(i+relation_types.length); //This lets us take in account the displacemente from the previous items.
 		var checkbox = s.rect(button_init_x, button_init_y + dy, button_size,button_size);
@@ -128,7 +129,7 @@ function initializeFilterButtons(){
     	checkbox.data("enabled", false);
     	checkbox.click(set_filter);
     	var text = s.text(button_init_x+button_text_dx, button_init_y + dy + button_text_dy, method_types[i]);
-    	text.attr({fill:"#FFFFFF"});
+    	text.attr({fill:"#FFFFFF", "font-family": "KL"});
 	}
 }
 
@@ -239,8 +240,10 @@ function hasFilterSelected(this_array){
 function initializeFTextBox(){
 	f_box = s.rect(0, 0, fbox_width, min_height, 10, 10);
 	f_name = s.text(f_text_dx, f_name_dy, "test");
+	f_name.attr({"font-size": "24px", "font-family": "bebas_book"});
 	f_lifetime = s.text(f_text_dx, f_lifetime_dy, "1900-2000");
-	f_desc = s.multitext(f_text_dx, f_desc_dy, "desc", fbox_width, { "font-size": "12px" });
+	f_lifetime.attr({"font-size": "20px", "font-family": "bebas_book"});
+	f_desc = s.multitext(f_text_dx, f_desc_dy, "desc", fbox_width, {"font-size": "12px", "font-family": "bebas_book"});
 	f_box.attr({
     	fill: "#F7CDDE",
     	stroke: "#FFFFFF",
@@ -264,7 +267,7 @@ function drawTimeline(){
 	for (var i = 0; i < years.length; i++) {
 		var n_year = 2008 + i;
 		year_number = s.text(year_init_x + year_horizontal_spacing*i, year_init_y, n_year.toString());
-		year_number.attr({fill:"#FFFFFF"});
+		year_number.attr({fill:"#FFFFFF", "font-family": "bebas_regular"});
 	}
 
 	var underline = s.rect(year_init_x + underline_dx, year_init_y + underline_dy, underline_width, underline_heigth);
@@ -362,7 +365,7 @@ function femaleHoverIn(){
 	if (this.attr("opacity") == 0.25){return}
 
 	// Need to create this first so I can get the n° of lines.
-	f_desc = s.multitext(textbox_dx+mouse_x+f_text_dx, mouse_y+f_desc_dy, this.data("info")[11], fbox_width - f_text_dx, { "font-size": "12px" });
+	f_desc = s.multitext(textbox_dx+mouse_x+f_text_dx, mouse_y+f_desc_dy, this.data("info")[11], fbox_width - f_text_dx, { "font-size": "14px", "font-family": "KL"});
 
 	var y_displacement = 0;
 	if (mouse_y > flip_y){ y_displacement = min_height + f_desc.attr("text").length * height_per_line;}
