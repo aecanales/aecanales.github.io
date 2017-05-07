@@ -28,6 +28,7 @@ var f_desc_dy = 60; //px
 var fbox_width = 230; //px
 var min_height = 65; //px
 var height_per_line = 15; //px
+var textbox_dx = 10; //px respect the mouse pos
 
 var flip_y = 450; //If mouse_y > than this, the fbox is drawn above the mouse instead of under
 
@@ -149,21 +150,47 @@ function set_filter(){
 
 function redrawTimeline(){
 	var selected = 0;
-	var opaque_tranparent_per_year = [];
-	for (i = 0; i < 10; i++) //Where 10 is the number of years covered in the database
-		opaque_tranparent_per_year.push([[],[]]);
+	var opaque_graphics = [];
+	var transparent_graphics = [];
+
 	for (i = 0; i < graphics_per_year.length; i++){
 		for (j = 0; j < graphics_per_year[i].length; j++){
 			if (graphics_per_year[i][j].attr("opacity") == 1){
-				opaque_tranparent_per_year[i][0].push(graphics_per_year[i][j]);
+				opaque_graphics.push(graphics_per_year[i][j]);
 				selected++;
 			}
 			else
-				opaque_tranparent_per_year[i][1].push(graphics_per_year[i][j]);
+				transparent_graphics.push(graphics_per_year[i][j]);
 		}
 	}
+
 	n_selected_text.attr({text: selected.toString()});
-	console.log(opaque_tranparent_per_year);
+	var years = timelineYearArray();
+	for (var i = 0; i < opaque_graphics.length; i++) {
+		var year_i = getYearIndex(opaque_graphics[i].data("info")[0]);
+
+		var x = years[year_i][0] + (f_horizontal_spacing*years[year_i][2]);
+		var y = years[year_i][1];
+
+		opaque_graphics[i].data("t_x",x);
+		opaque_graphics[i].data("t_y",y);
+		opaque_graphics[i].transform(createTransform(x, y, 0.05));
+		
+		years[year_i][2] += 1;
+		if (years[year_i][2] == bar_width) {
+			years[year_i][1] -= f_vertical_spacing;
+			years[year_i][2] = 0;
+		}
+	}
+	for (var i = 0; i < transparent_graphics.length; i++) {
+		var year_i = getYearIndex(transparent_graphics[i].data("info")[0]);
+		transparent_graphics[i].transform(createTransform(years[year_i][0] + (f_horizontal_spacing*years[year_i][2]), years[year_i][1], 0.05));
+		years[year_i][2] += 1;
+		if (years[year_i][2] == bar_width) {
+			years[year_i][1] -= f_vertical_spacing;
+			years[year_i][2] = 0;
+		}
+	}
 }
 
 //I currently check iterate through eveything when I filter. It... sounds unefficiente but it works well.
@@ -232,18 +259,7 @@ function fTextBoxFollowMouse(ev, x, y ){
 //TO DO - Comment how this code works
 function drawTimeline(){
 	// format: [starting x, cur y, width counter] If there was some smarter way to define this that'd be cool...
-	var years = [
-		[left_edge+bar_spacing*0, bottom_edge, 0], /*0 2008*/
-		[left_edge+bar_spacing*1, bottom_edge, 0], /*1 2009*/
-		[left_edge+bar_spacing*2, bottom_edge, 0], /*2 2010*/
-		[left_edge+bar_spacing*3, bottom_edge, 0], /*3 2011*/
-		[left_edge+bar_spacing*4, bottom_edge, 0], /*4 2012*/
-		[left_edge+bar_spacing*5, bottom_edge, 0], /*5 2013*/
-		[left_edge+bar_spacing*6, bottom_edge, 0], /*6 2014*/
-		[left_edge+bar_spacing*7, bottom_edge, 0], /*7 2015*/
-		[left_edge+bar_spacing*8, bottom_edge, 0], /*8 2016*/
-		[left_edge+bar_spacing*9, bottom_edge, 0]  /*9 2017*/
-	];
+	var years = timelineYearArray();
 
 	for (var i = 0; i < years.length; i++) {
 		var n_year = 2008 + i;
@@ -264,6 +280,21 @@ function drawTimeline(){
 			years[year_i][2] = 0;
 		}
 	}
+}
+
+function timelineYearArray(){
+	return [
+		[left_edge+bar_spacing*0, bottom_edge, 0], /*0 2008*/
+		[left_edge+bar_spacing*1, bottom_edge, 0], /*1 2009*/
+		[left_edge+bar_spacing*2, bottom_edge, 0], /*2 2010*/
+		[left_edge+bar_spacing*3, bottom_edge, 0], /*3 2011*/
+		[left_edge+bar_spacing*4, bottom_edge, 0], /*4 2012*/
+		[left_edge+bar_spacing*5, bottom_edge, 0], /*5 2013*/
+		[left_edge+bar_spacing*6, bottom_edge, 0], /*6 2014*/
+		[left_edge+bar_spacing*7, bottom_edge, 0], /*7 2015*/
+		[left_edge+bar_spacing*8, bottom_edge, 0], /*8 2016*/
+		[left_edge+bar_spacing*9, bottom_edge, 0]  /*9 2017*/
+	];
 }
 
 function getYearIndex(year){
@@ -307,12 +338,12 @@ function createFemale(x, y, info){
 	Snap.load("img/female.svg", function (f) { 
 		var g = f.select("g");
 		s.append(f);
-		g.data("orig_t_x",x);
-		g.data("orig_t_y",y);
+		g.data("t_x",x);
+		g.data("t_y",y);
 		g.data("info",info);
 		g.attr({fill:"#EA77A6"});
 
-		g.transform(createTransfrom(x, y, 0.05));
+		g.transform(createTransform(x, y, 0.05));
 		g.hover(femaleHoverIn, femaleHoverOut);
 
 		graphics_per_year[getYearIndex(info[0])].push(g)
@@ -323,26 +354,26 @@ function createFemale(x, y, info){
 }
 
 //Takes an (x,y) translate and scale s and returns a string in the Snap.svg transfrom format
-function createTransfrom(x, y, s){
+function createTransform(x, y, s){
 	return "T"+x+","+y + " S"+s;
 }
 
 function femaleHoverIn(){
 	if (this.attr("opacity") == 0.25){return}
 
-	// Need to create this first so I can get the line length.
-	f_desc = s.multitext(mouse_x+f_text_dx, mouse_y+f_desc_dy, this.data("info")[11], fbox_width, { "font-size": "12px" });
+	// Need to create this first so I can get the n° of lines.
+	f_desc = s.multitext(textbox_dx+mouse_x+f_text_dx, mouse_y+f_desc_dy, this.data("info")[11], fbox_width - f_text_dx, { "font-size": "12px" });
 
 	var y_displacement = 0;
 	if (mouse_y > flip_y){ y_displacement = min_height + f_desc.attr("text").length * height_per_line;}
 
-	f_box.attr({x: mouse_x, y: mouse_y-y_displacement, height: min_height + f_desc.attr("text").length * height_per_line});
-	f_name.attr({x: mouse_x+f_text_dx, y: mouse_y+f_name_dy-y_displacement});
-	f_lifetime.attr({x: mouse_x+f_text_dx, y: mouse_y+f_lifetime_dy-y_displacement});
+	f_box.attr({x: textbox_dx+mouse_x, y: mouse_y-y_displacement, height: min_height + f_desc.attr("text").length * height_per_line});
+	f_name.attr({x: textbox_dx+mouse_x+f_text_dx, y: mouse_y+f_name_dy-y_displacement});
+	f_lifetime.attr({x: textbox_dx+mouse_x+f_text_dx, y: mouse_y+f_lifetime_dy-y_displacement});
 	f_desc.attr({y: mouse_y+f_desc_dy-y_displacement});
 
 	this.attr({fill:"#D8256E"});
-	this.transform(createTransfrom(this.data("orig_t_x"), this.data("orig_t_y"), 0.06));
+	this.transform(createTransform(this.data("t_x"), this.data("t_y"), 0.06));
 	f_name.attr({text: this.data("info")[4]});
 	f_lifetime.attr({text: getLifetime(this.data("info"))});
 	
@@ -364,7 +395,7 @@ function femaleHoverOut(){
 	if (this.attr("opacity") == 0.25){return}
 
 	this.attr({fill:"#EA77A6"});
-	this.transform(createTransfrom(this.data("orig_t_x"), this.data("orig_t_y"), 0.05));
+	this.transform(createTransform(this.data("t_x"), this.data("t_y"), 0.05));
 	f_text_box.attr({visibility: "hidden"});
 	f_desc.remove();
 }
