@@ -23,8 +23,8 @@ var f_vertical_spacing = 6; //Snap.svg transfrom units (?)
 // SETTINGS - FEMALE DESCRIPTION TEXT BOX
 var f_text_dx = 10; //px
 var f_name_dy = 25; //px
-var f_lifetime_dy = 50; //px
-var f_desc_dy = 70; //px
+var f_lifetime_dy = 45; //px
+var f_desc_dy = 65; //px
 var fbox_width = 250; //px
 var min_height = 85; //px
 var height_per_line = 15; //px
@@ -59,20 +59,24 @@ var relation_types =
 	"ex-conviviente",
 	"tercero",
 	"???"];
+var region_types =[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0]; //0 means unknown region
 
 var n_selected_text = {} //text
 
-var graphics_per_year = []; //Array of arrays were each array holds graphics corresponding to a year
+var graphics_per_year = []; //Array of arrays were each array holds graphics corresponding to a year... not really sure how much I use it though :c
 for (i = 0; i < 10; i++) //Where 10 is the number of years covered in the database
 	graphics_per_year.push([]);
 
 var relation_graphics = initializeGraphicGroup(relation_types); //Array of arrays where each array hold graphics corresponding to a relation type
 var method_graphics = initializeGraphicGroup(method_types); //Idem for methods
+var region_graphics = initializeGraphicGroup(region_types); //Idem
 var relation_filters = initializeFilterGroup(relation_types); //Array of booleans corresponding whether a filter is selected
 var method_filters = initializeFilterGroup(method_types); //Idem
+var region_filters = initializeFilterGroup(region_types); //Idem
 
 var button_init_x = 1000; //px
 var button_init_y = 100; //px
+var button_bar_spacing = 150; //px, horizontal spacing in case it isn't clear
 var button_dy = 25; //px
 var button_size = 10; //px
 var button_text_dx = 20; //px
@@ -91,9 +95,8 @@ window.onload = function() {
 }
 
 function initializeFilterButtons(){
-	n_selected_text = s.text(button_init_x, button_init_y - 50, database.length-1);
-	n_selected_text.attr({fill:"#FFFFFF", "font-family": "KL"});
-
+	n_selected_text = s.text(button_init_x, button_init_y - 50, database.length-2);
+	n_selected_text.attr({fill:"#FFFFFF", "font-size": "36px", "font-family": "KL"});
 
 	var relation_text = s.text(button_init_x, button_init_y - 10, "RELACIÓN");
 	relation_text.attr({fill:"#FFFFFF", "font-family": "KL"});
@@ -104,7 +107,7 @@ function initializeFilterButtons(){
     		stroke: "#282828",
     		strokeWidth: 2
     	});
-    	//Why not a function? Because I need this by reference... it's not like I change it though so I could investigate this...
+    	//Why not a function? Because I need this by reference... it's not like I change it here though so I could investigate this...
     	checkbox.data("filter_array", relation_filters);
     	checkbox.data("index", i);
     	checkbox.data("enabled", false);
@@ -123,7 +126,7 @@ function initializeFilterButtons(){
     		stroke: "#282828",
     		strokeWidth: 2
     	});
-    	//Why not a function? Because I need this by reference... it's not like I change it though so I could investigate this...
+    	//Why not a function? Because I need this by reference... it's not like I change it here though so I could investigate this...
     	checkbox.data("filter_array", method_filters); 
     	checkbox.data("index", i);
     	checkbox.data("enabled", false);
@@ -131,6 +134,42 @@ function initializeFilterButtons(){
     	var text = s.text(button_init_x+button_text_dx, button_init_y + dy + button_text_dy, method_types[i]);
     	text.attr({fill:"#FFFFFF", "font-family": "KL"});
 	}
+
+	var region_text = s.text(button_init_x + button_bar_spacing, button_init_y - 10, "REGIÓN");
+	region_text.attr({fill:"#FFFFFF", "font-family": "KL"});
+	for (var i = 0; i < region_types.length - 1; i++) {
+		var checkbox = s.rect(button_init_x + button_bar_spacing, button_init_y + button_dy*i, button_size,button_size);
+		checkbox.attr({
+    		fill: "#FEFEFE",
+    		stroke: "#282828",
+    		strokeWidth: 2
+    	});
+    	//Why not a function? Because I need this by reference... it's not like I change it here though so I could investigate this...
+    	checkbox.data("filter_array", region_filters);
+    	checkbox.data("index", i);
+    	checkbox.data("enabled", false);
+    	checkbox.click(set_filter);
+    	var text = s.text(button_init_x+button_bar_spacing+button_text_dx, button_init_y + button_dy*i + button_text_dy, regionNToName(region_types[i]));
+    	text.attr({fill:"#FFFFFF", "font-family": "KL"});
+	}
+}
+
+function regionNToName(n){
+	if (n == 1) {return "Tarapacá"}
+	else if (n == 2) {return "Antofagasta"}
+	else if (n == 3) {return "Atacama"}
+	else if (n == 4) {return "Coquimbo"}
+	else if (n == 5) {return "Valparaíso"}
+	else if (n == 6) {return "O'Higgins"}
+	else if (n == 7) {return "Maule"}
+	else if (n == 8) {return "Biobío"}
+	else if (n == 9) {return "Araucanía"}
+	else if (n == 10) {return "Los Lagos"}
+	else if (n == 11) {return "Aysén"}
+	else if (n == 12) {return "Magallanes"}
+	else if (n == 13) {return "Metropolitana"}
+	else if (n == 14) {return "Los Ríos"}
+	else if (n == 15) {return "Arica y Parnacota"}
 }
 
 function set_filter(){
@@ -206,6 +245,8 @@ function run_filter(){
 			relation_graphics[relation_graphics.length - 1][j].attr({opacity: 0.25});
 		for (var j = 0; j < method_graphics[method_graphics.length-1].length; j++)
 			method_graphics[method_graphics.length-1][j].attr({opacity: 0.25});
+		for (var j = 0; j < region_graphics[region_graphics.length-1].length; j++)
+			region_graphics[region_graphics.length-1][j].attr({opacity: 0.25});
 	}
 
 	if (hasFilterSelected(relation_filters) == true){
@@ -224,10 +265,18 @@ function run_filter(){
 			}
 		}
 	}
+	if (hasFilterSelected(region_filters) == true){
+		for (var i = 0; i < region_filters.length; i++) {
+			if (region_filters[i] == false){
+				for (var j = 0; j < region_graphics[i].length; j++)
+					region_graphics[i][j].attr({opacity: 0.25});
+			}
+		}
+	}
 }
 
 function filterSelected(){
-	return hasFilterSelected(relation_filters) || hasFilterSelected(method_filters);
+	return hasFilterSelected(relation_filters) || hasFilterSelected(method_filters) || hasFilterSelected(region_filters);
 }
 
 function hasFilterSelected(this_array){
@@ -353,6 +402,7 @@ function createFemale(x, y, info){
 
 		relation_graphics[groupIndex(relation_types, info[7])].push(g);
 		method_graphics[groupIndex(method_types, info[8])].push(g);
+		region_graphics[groupIndex(region_types, info[2])].push(g);
 	});
 }
 
