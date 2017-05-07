@@ -51,22 +51,27 @@ var relation_types =
 	"familiar",
 	"conviviente",
 	"ex-conviviente",
-	"familiar",
 	"tercero",
 	"???"];
 
+var n_selected_text = {} //text
+
+var graphics_per_year = []; //Array of arrays were each array holds graphics corresponding to a year
+for (i = 0; i < 10; i++) //Where 10 is the number of years covered in the database
+	graphics_per_year.push([]);
+
 var relation_graphics = initializeGraphicGroup(relation_types); //Array of arrays where each array hold graphics corresponding to a relation type
 var method_graphics = initializeGraphicGroup(method_types); //Idem for methods
-
-var button_init_x = 1000;
-var button_init_y = 100;
-var button_dy = 25;
-var button_size = 10;
-var button_text_dx = 20;
-var button_text_dy = 8;
-
 var relation_filters = initializeFilterGroup(relation_types); //Array of booleans corresponding whether a filter is selected
 var method_filters = initializeFilterGroup(method_types); //Idem
+
+
+var button_init_x = 1000; //px
+var button_init_y = 100; //px
+var button_dy = 25; //px
+var button_size = 10; //px
+var button_text_dx = 20; //px
+var button_text_dy = 8; //px
 
 var mouse_x = 0;
 var mouse_y = 0;
@@ -81,6 +86,11 @@ window.onload = function() {
 }
 
 function initializeFilterButtons(){
+	n_selected_text = s.text(button_init_x, button_init_y - 50, database.length-1);
+	n_selected_text.attr({fill:"#FFFFFF"});
+
+	var relation_text = s.text(button_init_x, button_init_y - 10, "Relación");
+	relation_text.attr({fill:"#FFFFFF"});
 	for (var i = 0; i < relation_types.length - 1; i++) {
 		var checkbox = s.rect(button_init_x, button_init_y + button_dy*i, button_size,button_size);
 		checkbox.attr({
@@ -88,11 +98,31 @@ function initializeFilterButtons(){
     		stroke: "#282828",
     		strokeWidth: 2
     	});
+    	//Why not a function? Because I need this by reference... it's not like I change it though so I could investigate this...
     	checkbox.data("filter_array", relation_filters);
     	checkbox.data("index", i);
     	checkbox.data("enabled", false);
     	checkbox.click(set_filter);
     	var text = s.text(button_init_x+button_text_dx, button_init_y + button_dy*i + button_text_dy, relation_types[i]);
+    	text.attr({fill:"#FFFFFF"});
+	}
+
+	var method_text = s.text(button_init_x, button_init_y + button_dy*(relation_types.length) - 10, "Método");
+	method_text.attr({fill:"#FFFFFF"});
+	for (var i = 0; i < method_types.length - 1; i++) {
+		var dy = button_dy*(i+relation_types.length); //This lets us take in account the displacemente from the previous items.
+		var checkbox = s.rect(button_init_x, button_init_y + dy, button_size,button_size);
+		checkbox.attr({
+    		fill: "#FEFEFE",
+    		stroke: "#282828",
+    		strokeWidth: 2
+    	});
+    	//Why not a function? Because I need this by reference... it's not like I change it though so I could investigate this...
+    	checkbox.data("filter_array", method_filters); 
+    	checkbox.data("index", i);
+    	checkbox.data("enabled", false);
+    	checkbox.click(set_filter);
+    	var text = s.text(button_init_x+button_text_dx, button_init_y + dy + button_text_dy, method_types[i]);
     	text.attr({fill:"#FFFFFF"});
 	}
 }
@@ -102,34 +132,59 @@ function set_filter(){
 		this.attr({fill:"#DB1D6A"});
 		this.data("enabled", true);
 		this.data("filter_array")[this.data("index")] = true;
-		run_filter();
 	}
 	else{
 		this.attr({fill:"#FEFEFE"});
 		this.data("enabled", false);
 		this.data("filter_array")[this.data("index")] = false;
-		run_filter();
 	}
+
+	run_filter();
+	redrawTimeline();
 }
 
-//I currently check everything when I add a filter... it efficient enough?
-function run_filter(){
-	if (noFilterSelected()){
-		//Would be correct to do this on the complete female array but for now...
-		for (var i = 0; i < relation_filters.length; i++)
-			for (var j = 0; j < relation_graphics[i].length; j++)
-				relation_graphics[i][j].attr({opacity: 1});
-		return
-	}
-
-	for (var i = 0; i < relation_filters.length; i++) {
-		if (relation_filters[i] == false){
-			for (var j = 0; j < relation_graphics[i].length; j++)
-				relation_graphics[i][j].attr({opacity: 0.25});
+function redrawTimeline(){
+	var selected = 0;
+	var opaque_tranparent_per_year = [];
+	for (i = 0; i < 10; i++) //Where 10 is the number of years covered in the database
+		opaque_tranparent_per_year.push([[],[]]);
+	for (i = 0; i < graphics_per_year.length; i++){
+		for (j = 0; j < graphics_per_year[i].length; j++){
+			if (graphics_per_year[i][j].attr("opacity") == 1){
+				opaque_tranparent_per_year[i][0].push(graphics_per_year[i][j]);
+				selected++;
+			}
+			else
+				opaque_tranparent_per_year[i][1].push(graphics_per_year[i][j]);
 		}
-		else{
-			for (var j = 0; j < relation_graphics[i].length; j++)
-				relation_graphics[i][j].attr({opacity: 1});
+	}
+	n_selected_text.attr({text: selected.toString()});
+	console.log(opaque_tranparent_per_year);
+}
+
+//I currently check iterate through eveything when I filter. It... sounds unefficiente but it works well.
+function run_filter(){
+	for (var i = 0; i < graphics_per_year.length; i++)
+		for (var j = 0; j < graphics_per_year[i].length; j++)
+				graphics_per_year[i][j].attr({opacity: 1});
+	
+	if (hasFilterSelected(relation_filters) == false && hasFilterSelected(method_filters) == false)
+		return
+
+	if (hasFilterSelected(relation_filters) == true){
+		for (var i = 0; i < relation_filters.length; i++) {
+			if (relation_filters[i] == false){
+				for (var j = 0; j < relation_graphics[i].length; j++)
+					relation_graphics[i][j].attr({opacity: 0.25});
+			}
+		}
+	}
+	if (hasFilterSelected(method_filters) == true){
+		for (var i = 0; i < method_filters.length; i++) {
+			if (method_filters[i] == false){
+				for (var j = 0; j < method_graphics[i].length; j++)
+					method_graphics[i][j].attr({opacity: 0.25});
+			}
 		}
 	}
 }
@@ -142,6 +197,13 @@ function noFilterSelected(){
 		if (method_filters[i] == true)
 			return false;
 	return true;
+}
+
+function hasFilterSelected(this_array){
+	for (var i = 0; i < this_array.length; i++)
+		if (this_array[i] == true)
+			return true;
+	return false;
 }
 
 function initializeFTextBox(){
@@ -249,6 +311,8 @@ function createFemale(x, y, info){
 
 		g.transform(createTransfrom(x, y, 0.05));
 		g.hover(femaleHoverIn, femaleHoverOut);
+
+		graphics_per_year[getYearIndex(info[0])].push(g)
 
 		relation_graphics[groupIndex(relation_types, info[7])].push(g);
 		method_graphics[groupIndex(method_types, info[8])].push(g);
