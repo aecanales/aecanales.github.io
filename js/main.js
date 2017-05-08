@@ -415,7 +415,8 @@ function femaleHoverIn(){
 	if (this.attr("opacity") == 0.25){return}
 
 	// Need to create this first so I can get the n° of lines.
-	f_desc = s.multitext(textbox_dx+mouse_x+f_text_dx, mouse_y+f_desc_dy, this.data("info")[11], fbox_width - f_text_dx, { "font-size": "14px", "font-family": "KL"});
+	f_desc = s.multitext(textbox_dx+mouse_x+f_text_dx, mouse_y+f_desc_dy, this.data("info")[11], fbox_width - f_text_dx, {"text-align":"justify",
+	  "font-size": "14px", "font-family": "KL"});
 
 	var y_displacement = 0;
 	if (mouse_y > flip_y){ y_displacement = min_height + f_desc.attr("text").length * height_per_line;}
