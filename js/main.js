@@ -31,7 +31,7 @@ var min_height = 85; //px
 var height_per_line = 15; //px
 var textbox_dx = 10; //px respect the mouse pos
 
-var flip_y = 450; //If mouse_y > than this, the fbox is drawn above the mouse instead of under
+var flip_y = 400; //If mouse_y > than this, the fbox is drawn above the mouse instead of under
 
 var f_box = {} //rect
 var f_name = {} //text
@@ -53,11 +53,12 @@ var method_types =
 var relation_types =
 	["ex-pareja",
 	"ex-esposo",
-	"esposo",
+	"ex-conviviente",
 	"pareja",
+	"esposo",
+	"conviviente",
 	"familiar",
 	"conviviente",
-	"ex-conviviente",
 	"tercero",
 	"???"];
 var region_types =[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0]; //0 means unknown region
@@ -123,6 +124,7 @@ function initializeFilterButtons(){
 	for (var i = 0; i < method_types.length - 1; i++) {
 		var dy = button_dy*(i+relation_types.length); //This lets us take in account the displacemente from the previous items.
 		var text = s.text(button_init_x+button_text_dx, button_init_y + dy + button_text_dy, method_types[i]);
+		if (text.attr("text") == "apunalada") {text.attr({text: "apuñalada"})}
     	text.attr({fill:"#FFFFFF", "font-family": "KL"});
 		var checkbox = s.rect(button_init_x, button_init_y + dy, button_size,button_size);
 		checkbox.attr({
@@ -321,7 +323,7 @@ function drawTimeline(){
 	for (var i = 0; i < years.length; i++) {
 		var n_year = 2008 + i;
 		year_number = s.text(year_init_x + year_horizontal_spacing*i, year_init_y, n_year.toString());
-		year_number.attr({fill:"#FFFFFF", "font-family": "bebas_regular"});
+		year_number.attr({fill:"#FFFFFF", "font-family": "bebas_regular", "font-size": "32px"});
 	}
 
 	var underline = s.rect(year_init_x + underline_dx, year_init_y + underline_dy, underline_width, underline_heigth);
