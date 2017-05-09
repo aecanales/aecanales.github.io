@@ -95,12 +95,14 @@ window.onload = function() {
 }
 
 function initializeFilterButtons(){
-	n_selected_text = s.text(button_init_x, button_init_y - 50, database.length-2);
+	n_selected_text = s.text(button_init_x, button_init_y - 50, "N° de mujeres: 405");
 	n_selected_text.attr({fill:"#FFFFFF", "font-size": "36px", "font-family": "KL"});
 
 	var relation_text = s.text(button_init_x, button_init_y - 10, "RELACIÓN");
 	relation_text.attr({fill:"#FFFFFF", "font-family": "KL"});
 	for (var i = 0; i < relation_types.length - 1; i++) {
+		var text = s.text(button_init_x+button_text_dx, button_init_y + button_dy*i + button_text_dy, relation_types[i]);
+    	text.attr({fill:"#FFFFFF", "font-family": "KL"});
 		var checkbox = s.rect(button_init_x, button_init_y + button_dy*i, button_size,button_size);
 		checkbox.attr({
     		fill: "#FEFEFE",
@@ -111,15 +113,16 @@ function initializeFilterButtons(){
     	checkbox.data("filter_array", relation_filters);
     	checkbox.data("index", i);
     	checkbox.data("enabled", false);
+    	checkbox.data("text", text);
     	checkbox.click(set_filter);
-    	var text = s.text(button_init_x+button_text_dx, button_init_y + button_dy*i + button_text_dy, relation_types[i]);
-    	text.attr({fill:"#FFFFFF", "font-family": "KL"});
 	}
 
 	var method_text = s.text(button_init_x, button_init_y + button_dy*(relation_types.length) - 10, "MÉTODO");
 	method_text.attr({fill:"#FFFFFF", "font-family": "KL"});
 	for (var i = 0; i < method_types.length - 1; i++) {
 		var dy = button_dy*(i+relation_types.length); //This lets us take in account the displacemente from the previous items.
+		var text = s.text(button_init_x+button_text_dx, button_init_y + dy + button_text_dy, method_types[i]);
+    	text.attr({fill:"#FFFFFF", "font-family": "KL"});
 		var checkbox = s.rect(button_init_x, button_init_y + dy, button_size,button_size);
 		checkbox.attr({
     		fill: "#FEFEFE",
@@ -130,14 +133,15 @@ function initializeFilterButtons(){
     	checkbox.data("filter_array", method_filters); 
     	checkbox.data("index", i);
     	checkbox.data("enabled", false);
+    	checkbox.data("text", text);
     	checkbox.click(set_filter);
-    	var text = s.text(button_init_x+button_text_dx, button_init_y + dy + button_text_dy, method_types[i]);
-    	text.attr({fill:"#FFFFFF", "font-family": "KL"});
 	}
 
 	var region_text = s.text(button_init_x + button_bar_spacing, button_init_y - 10, "REGIÓN");
 	region_text.attr({fill:"#FFFFFF", "font-family": "KL"});
 	for (var i = 0; i < region_types.length - 1; i++) {
+		var text = s.text(button_init_x+button_bar_spacing+button_text_dx, button_init_y + button_dy*i + button_text_dy, regionNToName(region_types[i]));
+    	text.attr({fill:"#FFFFFF", "font-family": "KL"});
 		var checkbox = s.rect(button_init_x + button_bar_spacing, button_init_y + button_dy*i, button_size,button_size);
 		checkbox.attr({
     		fill: "#FEFEFE",
@@ -148,9 +152,8 @@ function initializeFilterButtons(){
     	checkbox.data("filter_array", region_filters);
     	checkbox.data("index", i);
     	checkbox.data("enabled", false);
+    	checkbox.data("text", text);
     	checkbox.click(set_filter);
-    	var text = s.text(button_init_x+button_bar_spacing+button_text_dx, button_init_y + button_dy*i + button_text_dy, regionNToName(region_types[i]));
-    	text.attr({fill:"#FFFFFF", "font-family": "KL"});
 	}
 }
 
@@ -177,13 +180,14 @@ function set_filter(){
 		this.attr({fill:"#DB1D6A"});
 		this.data("enabled", true);
 		this.data("filter_array")[this.data("index")] = true;
+		this.data("text").attr({fill:"#DB1D6A"});
 	}
 	else{
 		this.attr({fill:"#FEFEFE"});
 		this.data("enabled", false);
 		this.data("filter_array")[this.data("index")] = false;
+		this.data("text").attr({fill:"#FFFFFF"});
 	}
-
 	run_filter();
 	redrawTimeline();
 }
@@ -204,7 +208,7 @@ function redrawTimeline(){
 		}
 	}
 
-	n_selected_text.attr({text: selected.toString()});
+	n_selected_text.attr({text: "N° de mujeres: " + selected.toString()});
 	var years = timelineYearArray();
 	for (var i = 0; i < opaque_graphics.length; i++) {
 		var year_i = getYearIndex(opaque_graphics[i].data("info")[0]);
@@ -233,7 +237,7 @@ function redrawTimeline(){
 	}
 }
 
-//I currently check iterate through eveything when I filter. It... sounds unefficiente but it works well.
+//I currently check iterate through eveything when I filter. It... sounds unefficient but it works well.
 function run_filter(){
 	for (var i = 0; i < graphics_per_year.length; i++)
 		for (var j = 0; j < graphics_per_year[i].length; j++)

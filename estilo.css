@@ -35,7 +35,7 @@ svg {
 	src:url(fonts/KL.ttf);
 
 }
-
+.remove{}
 
 
 .texto {
@@ -52,7 +52,6 @@ svg {
 
 .boton {
 	
-	
 	top:370px;
 	bottom: ;
 	right: ;
@@ -62,7 +61,9 @@ svg {
 	line-height: 18px;
 }
 
-
+.hidden {
+	display: none;
+}
 
 
 
@@ -90,6 +91,15 @@ h2{
 h3{
 	color: white;
 	font-size: 35px;
+	width: 100%;
+	font-family: "YL" ;
+	text-align: center;
+	
+
+}
+h4{
+	color: white;
+	font-size: 30px;
 	width: 100%;
 	font-family: "YL" ;
 	text-align: center;

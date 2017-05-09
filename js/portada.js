@@ -476,6 +476,9 @@ function femaleHoverIn(){
 	f_text_box.attr({visibility: "visible"});
 	f_text_box.appendTo(f_text_box.paper);
 	f_desc.appendTo(f_desc.paper);
+	$('#entrar').removeClass('hidden');
+	$('#entrar').addClass('boton');
+	$("h4").css("color", "black");
 }
 
 function getLifetime(f_data){
