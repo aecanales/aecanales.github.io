@@ -30,9 +30,10 @@ var f_text_dx = 10; //px
 var f_name_dy = 25; //px
 var f_lifetime_dy = 45; //px
 var f_desc_dy = 65; //px
-var fbox_width = 300; //px
-var min_height = 85; //px
-var height_per_line = 15; //px
+var fbox_min_width = 100; //px
+var fbox_width_per_character = 6; //px
+var min_height = 60; //px
+var height_per_line = 0; //px
 var textbox_dx = 10; //px respect the mouse pos
 
 var flip_y = 450; //If mouse_y > than this, the fbox is drawn above the mouse instead of under
@@ -137,12 +138,14 @@ window.onload = function() {
 }
 
 function initializeFilterButtons(){
-	n_selected_text = s.text(button_init_x, button_init_y - 50, database.length-2);
+	n_selected_text = s.text(button_init_x, button_init_y - 50, "N° de mujeres: 405");
 	n_selected_text.attr({fill:"#FFFFFF", "font-size": "36px", "font-family": "KL"});
 
 	var relation_text = s.text(button_init_x, button_init_y - 10, "RELACIÓN");
 	relation_text.attr({fill:"#FFFFFF", "font-family": "KL"});
 	for (var i = 0; i < relation_types.length - 1; i++) {
+		var text = s.text(button_init_x+button_text_dx, button_init_y + button_dy*i + button_text_dy, relation_types[i]);
+    	text.attr({fill:"#FFFFFF", "font-family": "KL"});
 		var checkbox = s.rect(button_init_x, button_init_y + button_dy*i, button_size,button_size);
 		checkbox.attr({
     		fill: "#FEFEFE",
@@ -153,15 +156,16 @@ function initializeFilterButtons(){
     	checkbox.data("filter_array", relation_filters);
     	checkbox.data("index", i);
     	checkbox.data("enabled", false);
+    	checkbox.data("text", text);
     	checkbox.click(set_filter);
-    	var text = s.text(button_init_x+button_text_dx, button_init_y + button_dy*i + button_text_dy, relation_types[i]);
-    	text.attr({fill:"#FFFFFF", "font-family": "KL"});
 	}
 
 	var method_text = s.text(button_init_x, button_init_y + button_dy*(relation_types.length) - 10, "MÉTODO");
 	method_text.attr({fill:"#FFFFFF", "font-family": "KL"});
 	for (var i = 0; i < method_types.length - 1; i++) {
 		var dy = button_dy*(i+relation_types.length); //This lets us take in account the displacemente from the previous items.
+		var text = s.text(button_init_x+button_text_dx, button_init_y + dy + button_text_dy, method_types[i]);
+    	text.attr({fill:"#FFFFFF", "font-family": "KL"});
 		var checkbox = s.rect(button_init_x, button_init_y + dy, button_size,button_size);
 		checkbox.attr({
     		fill: "#FEFEFE",
@@ -172,14 +176,15 @@ function initializeFilterButtons(){
     	checkbox.data("filter_array", method_filters); 
     	checkbox.data("index", i);
     	checkbox.data("enabled", false);
+    	checkbox.data("text", text);
     	checkbox.click(set_filter);
-    	var text = s.text(button_init_x+button_text_dx, button_init_y + dy + button_text_dy, method_types[i]);
-    	text.attr({fill:"#FFFFFF", "font-family": "KL"});
 	}
 
 	var region_text = s.text(button_init_x + button_bar_spacing, button_init_y - 10, "REGIÓN");
 	region_text.attr({fill:"#FFFFFF", "font-family": "KL"});
 	for (var i = 0; i < region_types.length - 1; i++) {
+		var text = s.text(button_init_x+button_bar_spacing+button_text_dx, button_init_y + button_dy*i + button_text_dy, regionNToName(region_types[i]));
+    	text.attr({fill:"#FFFFFF", "font-family": "KL"});
 		var checkbox = s.rect(button_init_x + button_bar_spacing, button_init_y + button_dy*i, button_size,button_size);
 		checkbox.attr({
     		fill: "#FEFEFE",
@@ -190,9 +195,8 @@ function initializeFilterButtons(){
     	checkbox.data("filter_array", region_filters);
     	checkbox.data("index", i);
     	checkbox.data("enabled", false);
+    	checkbox.data("text", text);
     	checkbox.click(set_filter);
-    	var text = s.text(button_init_x+button_bar_spacing+button_text_dx, button_init_y + button_dy*i + button_text_dy, regionNToName(region_types[i]));
-    	text.attr({fill:"#FFFFFF", "font-family": "KL"});
 	}
 }
 
@@ -219,13 +223,14 @@ function set_filter(){
 		this.attr({fill:"#DB1D6A"});
 		this.data("enabled", true);
 		this.data("filter_array")[this.data("index")] = true;
+		this.data("text").attr({fill:"#DB1D6A"});
 	}
 	else{
 		this.attr({fill:"#FEFEFE"});
 		this.data("enabled", false);
 		this.data("filter_array")[this.data("index")] = false;
+		this.data("text").attr({fill:"#FFFFFF"});
 	}
-
 	run_filter();
 	redrawTimeline();
 }
@@ -246,7 +251,7 @@ function redrawTimeline(){
 		}
 	}
 
-	n_selected_text.attr({text: selected.toString()});
+	n_selected_text.attr({text: "N° de mujeres: " + selected.toString()});
 	var years = timelineYearArray();
 	for (var i = 0; i < opaque_graphics.length; i++) {
 		var year_i = getYearIndex(opaque_graphics[i].data("info")[0]);
@@ -275,7 +280,7 @@ function redrawTimeline(){
 	}
 }
 
-//I currently check iterate through eveything when I filter. It... sounds unefficiente but it works well.
+//I currently check iterate through eveything when I filter. It... sounds unefficient but it works well.
 function run_filter(){
 	for (var i = 0; i < graphics_per_year.length; i++)
 		for (var j = 0; j < graphics_per_year[i].length; j++)
@@ -329,12 +334,12 @@ function hasFilterSelected(this_array){
 }
 
 function initializeFTextBox(){
-	f_box = s.rect(0, 0, fbox_width, min_height, 10, 10);
+	f_box = s.rect(0, 0, fbox_min_width, min_height, 10, 10);
 	f_name = s.text(f_text_dx, f_name_dy, "test");
 	f_name.attr({"font-size": "24px", "font-family": "bebas_book"});
 	f_lifetime = s.text(f_text_dx, f_lifetime_dy, "1900-2000");
 	f_lifetime.attr({"font-size": "20px", "font-family": "bebas_book"});
-	f_desc = s.multitext(f_text_dx, f_desc_dy, "desc", fbox_width, {"font-size": "12px", "font-family": "bebas_book"});
+	f_desc = s.multitext(f_text_dx, f_desc_dy, "desc", fbox_min_width, {"font-size": "12px", "font-family": "bebas_book"});
 	f_box.attr({
     	fill: "#F7CDDE",
     	stroke: "#FFFFFF",
@@ -456,14 +461,15 @@ function createTransform(x, y, s){
 function femaleHoverIn(){
 	if (this.attr("opacity") == 0.25){return}
 
+	var this_width = fbox_min_width + fbox_width_per_character * this.data("info")[4].length;
+
 	// Need to create this first so I can get the n° of lines.
-	f_desc = s.multitext(textbox_dx+mouse_x+f_text_dx, mouse_y+f_desc_dy, "", fbox_width - f_text_dx, {"text-align":"justify",
-	  "font-size": "14px", "font-family": "KL"});
+	f_desc = s.multitext(textbox_dx+mouse_x+f_text_dx, mouse_y+f_desc_dy, "", this_width - f_text_dx*2, {"font-size": "14px", "font-family": "KL"});
 
 	var y_displacement = 0;
 	if (mouse_y > flip_y){ y_displacement = min_height + f_desc.attr("text").length * height_per_line;}
 
-	f_box.attr({x: textbox_dx+mouse_x, y: mouse_y-y_displacement, height: min_height + f_desc.attr("text").length * height_per_line});
+	f_box.attr({x: textbox_dx+mouse_x, y: mouse_y-y_displacement, width: this_width, height: min_height + f_desc.attr("text").length * height_per_line});
 	f_name.attr({x: textbox_dx+mouse_x+f_text_dx, y: mouse_y+f_name_dy-y_displacement});
 	f_lifetime.attr({x: textbox_dx+mouse_x+f_text_dx, y: mouse_y+f_lifetime_dy-y_displacement});
 	f_desc.attr({y: mouse_y+f_desc_dy-y_displacement});
@@ -476,9 +482,6 @@ function femaleHoverIn(){
 	f_text_box.attr({visibility: "visible"});
 	f_text_box.appendTo(f_text_box.paper);
 	f_desc.appendTo(f_desc.paper);
-	$('#entrar').removeClass('hidden');
-	$('#entrar').addClass('boton');
-	$("h4").css("color", "black");
 }
 
 function getLifetime(f_data){
@@ -498,5 +501,4 @@ function femaleHoverOut(){
 	f_text_box.attr({visibility: "hidden"});
 	f_desc.remove();
 }
-
 

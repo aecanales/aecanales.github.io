@@ -25,7 +25,8 @@ var f_text_dx = 10; //px
 var f_name_dy = 25; //px
 var f_lifetime_dy = 45; //px
 var f_desc_dy = 65; //px
-var fbox_width = 250; //px
+var fbox_min_width = 150; //px
+var fbox_width_per_character = 6; //px
 var min_height = 85; //px
 var height_per_line = 15; //px
 var textbox_dx = 10; //px respect the mouse pos
@@ -291,12 +292,12 @@ function hasFilterSelected(this_array){
 }
 
 function initializeFTextBox(){
-	f_box = s.rect(0, 0, fbox_width, min_height, 10, 10);
+	f_box = s.rect(0, 0, fbox_min_width, min_height, 10, 10);
 	f_name = s.text(f_text_dx, f_name_dy, "test");
 	f_name.attr({"font-size": "24px", "font-family": "bebas_book"});
 	f_lifetime = s.text(f_text_dx, f_lifetime_dy, "1900-2000");
 	f_lifetime.attr({"font-size": "20px", "font-family": "bebas_book"});
-	f_desc = s.multitext(f_text_dx, f_desc_dy, "desc", fbox_width, {"font-size": "12px", "font-family": "bebas_book"});
+	f_desc = s.multitext(f_text_dx, f_desc_dy, "desc", fbox_min_width, {"font-size": "12px", "font-family": "bebas_book"});
 	f_box.attr({
     	fill: "#F7CDDE",
     	stroke: "#FFFFFF",
@@ -418,14 +419,15 @@ function createTransform(x, y, s){
 function femaleHoverIn(){
 	if (this.attr("opacity") == 0.25){return}
 
+	var this_width = fbox_min_width + fbox_width_per_character * this.data("info")[4].length;
+
 	// Need to create this first so I can get the n° of lines.
-	f_desc = s.multitext(textbox_dx+mouse_x+f_text_dx, mouse_y+f_desc_dy, this.data("info")[11], fbox_width - f_text_dx, {"text-align":"justify",
-	  "font-size": "14px", "font-family": "KL"});
+	f_desc = s.multitext(textbox_dx+mouse_x+f_text_dx, mouse_y+f_desc_dy, this.data("info")[11], this_width - f_text_dx*2, {"font-size": "14px", "font-family": "KL"});
 
 	var y_displacement = 0;
 	if (mouse_y > flip_y){ y_displacement = min_height + f_desc.attr("text").length * height_per_line;}
 
-	f_box.attr({x: textbox_dx+mouse_x, y: mouse_y-y_displacement, height: min_height + f_desc.attr("text").length * height_per_line});
+	f_box.attr({x: textbox_dx+mouse_x, y: mouse_y-y_displacement, width: this_width, height: min_height + f_desc.attr("text").length * height_per_line});
 	f_name.attr({x: textbox_dx+mouse_x+f_text_dx, y: mouse_y+f_name_dy-y_displacement});
 	f_lifetime.attr({x: textbox_dx+mouse_x+f_text_dx, y: mouse_y+f_lifetime_dy-y_displacement});
 	f_desc.attr({y: mouse_y+f_desc_dy-y_displacement});
