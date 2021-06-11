@@ -4,6 +4,9 @@
 
 <title>Little Pond - A Teacup Prequel</title>
 
+<link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet"> 
+
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -7079,16 +7082,9 @@ VAR var1
 </script>
 
 <style>
-html {
-	margin:0px;
-	padding:0px;
-}
-
 body {
-	margin:0px;
-	padding:0px;
-	overflow:hidden;
-	background:#ffffff;
+	background-image: url("bg.png");
+	background-repeat: repeat;
 }
 
 #game {
@@ -7096,6 +7092,47 @@ body {
 	margin:auto;
 	display:block;
 }
+
+img {
+	padding: 10px;
+}
+
+p, a {
+	padding: 5px;
+	text-align: center;
+	font-family: 'Open Sans', sans-serif;
+}
+
+a.button {
+	display:inline-block;
+	padding:0.35em 1.2em;
+	border:0.1em solid #5CA88E;
+	margin:0 0.3em 0.3em 0;
+	border-radius:0.12em;
+	box-sizing: border-box;
+	text-decoration:none;
+	font-family:'Open Sans',sans-serif;
+	font-size: 22px;
+	color:#5CA88E;
+	text-align:center;
+	transition: all 0.2s;
+}
+
+a.button:hover {
+	color:black;
+	background-color:#95EEB6;
+}
+
+#content {
+	margin-left: auto;
+	margin-right: auto;
+	width: 768px;
+	position: relative;
+  	height: auto;
+  	min-height: 100% !important;
+	background: #F6FDD8;
+}
+
 </style>
 
 <!-- SCRIPTS -->
@@ -17161,11 +17198,11 @@ exports.hackOptions = hackOptions;
 
 <!-- DOCUMENT BODY -->
 <body onload="startExportedGame()">
-	<h1>Little Pond</h1>
-	<!-- GAME CANVAS -->
-	<canvas id="game"></canvas>
-	<p>This is a test.</p>
-
-
-
+	<div id="content">
+		<p><img src="logo.png"></p>
+		<div id="touchTrigger"><canvas id="game"></canvas></div>
+		<p>How did Teacup arrive to Little Pond and meet her first friends? <br> Find out in this mini-prequel 🐸 🍵</p>
+		<p>Want to learn more about tea? Get Teacup's tea guide <b>for free</b> here!</p>
+		<p><a href="https://newsletter.smarto.club/" class="button">Get tea guide!</a></p>
+	</div>
 </body></html>
